@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LOS Survey</string>
+    <string name="mapbox_access_token">YOUR_MAPBOX_TOKEN_HERE</string>
+
+    <!-- Common -->
+    <string name="action_cancel">CANCEL</string>
+    <string name="action_proceed">PROCEED</string>
+    <string name="action_start">START</string>
+    <string name="action_pause">PAUSE</string>
+    <string name="action_abort">ABORT</string>
+    <string name="action_share">SHARE</string>
+    <string name="action_delete">DELETE</string>
+    <string name="action_back">BACK</string>
+
+    <!-- Home -->
+    <string name="home_title">LOS SURVEY</string>
+    <string name="home_missions">MISSIONS</string>
+    <string name="home_new_mission">NEW MISSION</string>
+    <string name="home_no_missions">No missions yet. Tap NEW MISSION to start.</string>
+
+    <!-- Upload -->
+    <string name="upload_title">UPLOAD SURVEY FILE</string>
+    <string name="upload_pick_file">PICK CSV / XLSX</string>
+    <string name="upload_mission_name">MISSION NAME</string>
+    <string name="upload_save_mission">SAVE MISSION</string>
+
+    <!-- Mission -->
+    <string name="mission_sites">SITES</string>
+    <string name="mission_start">START MISSION</string>
+    <string name="mission_summary">MISSION SUMMARY</string>
+
+    <!-- Flight -->
+    <string name="flight_title">FLIGHT</string>
+    <string name="flight_status">STATUS</string>
+    <string name="flight_progress">PROGRESS</string>
+
+    <!-- Report -->
+    <string name="report_title">REPORT</string>
+    <string name="report_generate">GENERATE PDF</string>
+    <string name="report_share">SHARE PDF</string>
+</resources>

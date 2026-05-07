@@ -15,11 +15,13 @@ import com.lossurvey.drone.ui.screens.flight.FlightScreen
 import com.lossurvey.drone.ui.screens.home.HomeScreen
 import com.lossurvey.drone.ui.screens.mission.MissionDetailScreen
 import com.lossurvey.drone.ui.screens.report.ReportScreen
+import com.lossurvey.drone.ui.screens.settings.SettingsScreen
 import com.lossurvey.drone.ui.screens.upload.UploadScreen
 
 object Routes {
     const val Home = "home"
     const val Upload = "upload"
+    const val Settings = "settings"
     const val MissionDetail = "mission/{id}"
     const val Flight = "flight/{id}"
     const val Report = "report/{id}"
@@ -43,6 +45,7 @@ fun AppNavigation() {
     ) {
         composable(Routes.Home) { HomeScreen(navController) }
         composable(Routes.Upload) { UploadScreen(navController) }
+        composable(Routes.Settings) { SettingsScreen(navController) }
         composable(
             Routes.MissionDetail,
             arguments = listOf(navArgument("id") { type = NavType.LongType })

@@ -7,6 +7,7 @@ import com.lossurvey.drone.data.models.MissionStatus
 import com.lossurvey.drone.data.models.Site
 import com.lossurvey.drone.data.models.SiteStatus
 import com.lossurvey.drone.data.models.SurveyType
+import com.lossurvey.drone.data.preferences.AppPreferences
 import com.lossurvey.drone.data.repository.MissionRepository
 import com.lossurvey.drone.storage.MetadataWriter
 import com.lossurvey.drone.storage.ProjectFolderManager
@@ -44,7 +45,8 @@ class MissionExecutor @Inject constructor(
     private val rtkManager: RTKManager,
     private val metadataWriter: MetadataWriter,
     private val projectFolderManager: ProjectFolderManager,
-    private val repository: MissionRepository
+    private val repository: MissionRepository,
+    private val prefs: AppPreferences
 ) {
     private val _executionState = MutableStateFlow(ExecutionState())
     val executionState: StateFlow<ExecutionState> = _executionState.asStateFlow()
@@ -59,20 +61,30 @@ class MissionExecutor @Inject constructor(
     fun resume() { paused = false }
     fun abort() { aborted = true; paused = false }
 
-    fun validatePreflight(mission: Mission, allowGpsFallback: Boolean = false): PreflightResult {
+    fun validatePreflight(
+        mission: Mission,
+        allowGpsFallback: Boolean = prefs.current.allowGpsFallback
+    ): PreflightResult {
         val errors = mutableListOf<String>()
         val state = djiManager.droneState.value
+        val cfg = prefs.current
 
         if (!state.isConnected) errors.add("Drone not connected")
-        if (state.batteryPercent < 30) errors.add("Battery low: ${state.batteryPercent}% (need ≥30%)")
-        if (state.gpsSignal < 4) errors.add("GPS signal weak: ${state.gpsSignal}/5")
-        if (!rtkManager.isLocked && !allowGpsFallback) errors.add("RTK not fixed")
+        if (state.batteryPercent < cfg.minBatteryPercent)
+            errors.add("Battery low: ${state.batteryPercent}% (need ≥${cfg.minBatteryPercent}%)")
+        if (state.gpsSignal < cfg.minGpsSatellites)
+            errors.add("GPS signal weak: ${state.gpsSignal}/${cfg.minGpsSatellites} required")
+        if (!rtkManager.isLocked && !(allowGpsFallback || cfg.allowGpsFallback))
+            errors.add("RTK not fixed")
         if (mission.sites.isEmpty()) errors.add("No sites in mission")
 
         return PreflightResult(errors.isEmpty(), errors)
     }
 
-    suspend fun executeMission(mission: Mission, allowGpsFallback: Boolean = false): Result<Unit> {
+    suspend fun executeMission(
+        mission: Mission,
+        allowGpsFallback: Boolean = prefs.current.allowGpsFallback
+    ): Result<Unit> {
         val validation = validatePreflight(mission, allowGpsFallback)
         if (!validation.passed) return Result.failure(IllegalStateException(validation.errors.joinToString(", ")))
 
@@ -239,7 +251,7 @@ class MissionExecutor @Inject constructor(
                     mission.projectFolderPath
                 )
                 onCapture(entry)
-                if (SimulatorConfig.ENABLED) {
+                if (prefs.current.simulatorMode) {
                     djiManager.simulateBatteryDrain(SimulatorConfig.MOCK_DRAIN_PER_CAPTURE_PCT)
                 }
             } else {

@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import com.lossurvey.drone.data.preferences.AppPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -26,7 +27,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class CameraController @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val prefs: AppPreferences
 ) {
 
     suspend fun configureAndCapture(
@@ -36,7 +38,7 @@ class CameraController @Inject constructor(
         stamp: CaptureStamp
     ): Result<File> = withContext(Dispatchers.IO) {
         try {
-            if (SimulatorConfig.ENABLED) {
+            if (prefs.current.simulatorMode) {
                 writePlaceholderImage(targetFile, stamp)
                 delay(400)
                 return@withContext Result.success(targetFile)

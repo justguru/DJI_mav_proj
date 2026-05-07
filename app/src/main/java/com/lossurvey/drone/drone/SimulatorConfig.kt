@@ -1,14 +1,10 @@
 package com.lossurvey.drone.drone
 
+/**
+ * Internal constants for simulator behaviour. The on/off toggle now lives in
+ * AppPreferences (Settings screen) and is read at runtime.
+ */
 object SimulatorConfig {
-    /**
-     * Set to true to run without a real DJI drone. Emits mock telemetry and
-     * runs missions as fake progress with placeholder image captures.
-     * Toggle to false once a real DJI Mavic 3E + RC Pro is wired in and the
-     * MSDK v5 dependencies are uncommented in app/build.gradle.kts.
-     */
-    const val ENABLED = true
-
     const val MOCK_BATTERY_START = 92
     const val MOCK_GPS_SAT = 5
     const val MOCK_RTK_ACCURACY_M = 0.018

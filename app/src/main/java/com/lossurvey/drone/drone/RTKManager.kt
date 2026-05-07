@@ -1,6 +1,7 @@
 package com.lossurvey.drone.drone
 
 import android.content.Context
+import com.lossurvey.drone.data.preferences.AppPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,28 +27,21 @@ data class RTKState(
 @Singleton
 class RTKManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val djiManager: DJIManager
+    private val djiManager: DJIManager,
+    private val prefs: AppPreferences
 ) {
     private val _rtkState = MutableStateFlow(RTKState())
     val rtkState: StateFlow<RTKState> = _rtkState.asStateFlow()
 
     fun init() {
-        if (SimulatorConfig.ENABLED) {
-            mirrorFromSimulator()
-        } else {
-            // TODO: subscribe to real RTK callbacks
-        }
-    }
-
-    private fun mirrorFromSimulator() {
-        // Drone state is the source of truth when simulating
+        // Real RTK callbacks subscribe here when SDK is wired in.
     }
 
     val isLocked: Boolean
-        get() = if (SimulatorConfig.ENABLED) djiManager.droneState.value.rtkLocked
+        get() = if (prefs.current.simulatorMode) djiManager.droneState.value.rtkLocked
                 else _rtkState.value.isFixed
 
     val accuracy: Double
-        get() = if (SimulatorConfig.ENABLED) djiManager.droneState.value.rtkAccuracyM
+        get() = if (prefs.current.simulatorMode) djiManager.droneState.value.rtkAccuracyM
                 else _rtkState.value.horizontalAccuracyM
 }

@@ -2,6 +2,7 @@ package com.lossurvey.drone.drone
 
 import android.content.Context
 import com.lossurvey.drone.data.models.DroneState
+import com.lossurvey.drone.data.preferences.AppPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,16 +29,18 @@ sealed class ConnectionEvent {
 
 /**
  * Owns DJI MSDK v5 lifecycle and exposes drone telemetry as flows.
+ * Reacts to AppPreferences.simulatorMode toggle at runtime.
  *
- * REAL-DRONE WIRING (when SimulatorConfig.ENABLED == false):
+ * REAL-DRONE WIRING (when simulatorMode == false):
  *  - Uncomment DJI dependencies in app/build.gradle.kts
- *  - In init(): DJISDKManager.getInstance().registerApp(context, callback)
+ *  - In initReal(): DJISDKManager.getInstance().registerApp(context, callback)
  *  - In setupListeners(): subscribe via FlightControllerKey + BatteryKey + KeyTools
  *  - Map state.aircraftLocation, attitude.yaw, isFlying into DroneState
  */
 @Singleton
 class DJIManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val prefs: AppPreferences
 ) {
     private val _droneState = MutableStateFlow(DroneState())
     val droneState: StateFlow<DroneState> = _droneState.asStateFlow()
@@ -47,19 +52,20 @@ class DJIManager @Inject constructor(
     private var simJob: Job? = null
 
     fun init() {
-        if (SimulatorConfig.ENABLED) {
-            startSimulator()
-        } else {
-            // TODO: real MSDK init
-            // DJISDKManager.getInstance().registerApp(context, sdkCallback)
+        scope.launch {
+            prefs.flow
+                .map { it.simulatorMode }
+                .distinctUntilChanged()
+                .collect { simulator ->
+                    if (simulator) startSimulator() else initReal()
+                }
         }
     }
 
     private fun startSimulator() {
         simJob?.cancel()
         simJob = scope.launch {
-            // Boot delay to mimic SDK registration
-            delay(1200)
+            delay(800)
             _droneState.value = DroneState(
                 isConnected = true,
                 batteryPercent = SimulatorConfig.MOCK_BATTERY_START,
@@ -75,14 +81,20 @@ class DJIManager @Inject constructor(
             )
             _connectionEvent.tryEmit(ConnectionEvent.Connected)
 
-            // RTK lock after a few seconds
-            delay(2500)
+            delay(2200)
             _droneState.value = _droneState.value.copy(
                 rtkLocked = true,
                 rtkAccuracyM = SimulatorConfig.MOCK_RTK_ACCURACY_M,
                 flightMode = "RTK"
             )
         }
+    }
+
+    private fun initReal() {
+        simJob?.cancel()
+        _droneState.value = DroneState()
+        // TODO: real MSDK init
+        // DJISDKManager.getInstance().registerApp(context, sdkCallback)
     }
 
     fun simulateBatteryDrain(deltaPercent: Int) {
@@ -110,7 +122,10 @@ class DJIManager @Inject constructor(
 
     fun isReadyToFly(): Boolean {
         val s = _droneState.value
-        return s.isConnected && s.batteryPercent >= 30 && s.gpsSignal >= 4
+        val cfg = prefs.current
+        return s.isConnected &&
+            s.batteryPercent >= cfg.minBatteryPercent &&
+            s.gpsSignal >= cfg.minGpsSatellites
     }
 
     fun shutdown() {

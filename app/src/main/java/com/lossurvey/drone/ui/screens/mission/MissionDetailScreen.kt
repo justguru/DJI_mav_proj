@@ -64,7 +64,7 @@ fun MissionDetailScreen(
     val missionFlow = viewModel.missionFlow(missionId)
     val mission by missionFlow.collectAsState()
     var showPreflight by remember { mutableStateOf(false) }
-    var allowGps by remember { mutableStateOf(false) }
+    var allowGps by remember { mutableStateOf(viewModel.gpsFallbackDefault()) }
 
     Scaffold(
         containerColor = LOSColors.Background,

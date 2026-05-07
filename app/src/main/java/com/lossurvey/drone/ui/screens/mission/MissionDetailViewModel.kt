@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lossurvey.drone.data.models.DroneState
 import com.lossurvey.drone.data.models.Mission
+import com.lossurvey.drone.data.preferences.AppPreferences
 import com.lossurvey.drone.data.repository.MissionRepository
 import com.lossurvey.drone.drone.DJIManager
 import com.lossurvey.drone.drone.MissionExecutor
@@ -19,7 +20,8 @@ class MissionDetailViewModel @Inject constructor(
     private val repository: MissionRepository,
     djiManager: DJIManager,
     private val rtkManager: RTKManager,
-    private val executor: MissionExecutor
+    private val executor: MissionExecutor,
+    private val prefs: AppPreferences
 ) : ViewModel() {
 
     val droneState: StateFlow<DroneState> = djiManager.droneState
@@ -33,4 +35,6 @@ class MissionDetailViewModel @Inject constructor(
         executor.validatePreflight(mission, allowGpsFallback)
 
     fun rtkLocked(): Boolean = rtkManager.isLocked
+
+    fun gpsFallbackDefault(): Boolean = prefs.current.allowGpsFallback
 }

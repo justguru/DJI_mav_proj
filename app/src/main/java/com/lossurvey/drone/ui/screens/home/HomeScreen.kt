@@ -20,9 +20,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -80,7 +82,15 @@ fun HomeScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White
                         )
-                        Spacer(Modifier.width(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        IconButton(onClick = { navController.navigate(Routes.Settings) }) {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint = Color.White
+                            )
+                        }
+                        Spacer(Modifier.width(8.dp))
                     }
                 }
             )
